@@ -1,0 +1,28 @@
+{
+  "name": "nicescraper",
+  "version": "1.0.0",
+  "description": "Deep web scraper with recursive subpages for each param and unknown-pagination loop",
+  "main": "ParserTester.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+ssh://git@github.com/FlameArt/nicescraper.git"
+  },
+  "keywords": [
+    "web",
+    "scraper"
+  ],
+  "author": "FlameArt",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/FlameArt/nicescraper/issues"
+  },
+  "homepage": "https://github.com/FlameArt/nicescraper#readme",
+  "dependencies": {
+    "puppeteer": "^2.0.0",
+    "scrape-it": "^5.2.0",
+    "websocket-core": "github:FlameArt/websocket-core"
+  }
+}
