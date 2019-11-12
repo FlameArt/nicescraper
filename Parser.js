@@ -12,7 +12,7 @@ class Parser {
    * @param opts
    * @return {Promise<Object>}
    */
-  async parse(json, subpages, opts = {}) {
+  async parseOne(json, subpages, opts = {}) {
   
     // Нормализуем параметры и заполняем стандартными параметрами неизвестные
     opts = this.normalizeOpts(opts);
@@ -231,7 +231,6 @@ class Parser {
   /**
    * Постраничный парсер
    * @param json
-   * @param subpages
    * @param opts Параметры
    * @param opts.Pauses
    * @param {int} opts.Pauses.Subpages
@@ -246,16 +245,22 @@ class Parser {
    * @param {Function} opts.pageConverter Функция, которая конвертит страницу
    * @return {Promise<void>}
    */
-  async pagesParser(json, subpages, opts = {}) {
+  async parse(json, opts = {}) {
   
     // Нормализуем параметры и заполняем стандартными параметрами неизвестные
     opts = this.normalizeOpts(opts);
+    
+    // Не нужно указывать subpages, если они есть во входном массиве [так обычно и приходит]
+    let subpages = [];
+    if(json.hasOwnProperty('subpages'))
+      subpages = json['subpages'];
+    
     
     // Парсим страницы по ходу появления надписи "следующая страница" любое число раз
     while (true) {
       
       // Парсим страницу
-      let pagedata = await this.parse(json, subpages, opts);
+      let pagedata = await this.parseOne(json, subpages, opts);
   
       // Конвертируем спраршенное через функцию-конвертер
       await opts.pageConverter(pagedata);
