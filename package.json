@@ -2,9 +2,8 @@
   "name": "nicescraper",
   "version": "1.0.0",
   "description": "Deep web scraper with recursive subpages for each param and unknown-pagination loop",
-  "main": "ParserTester.js",
+  "main": "Parser.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {
     "type": "git",

@@ -6,3 +6,5 @@ yarn-error.log
 .idea
 *.iml
 package-lock.json
+run.cmd
+run.lnk
