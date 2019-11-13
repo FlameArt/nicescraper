@@ -55,7 +55,7 @@ class WS extends WebSocketCore {
   async getMessage(json, user, txtdata) {
     
     // Парсим
-    let data = await this.Parser.pagesParser(json, json.subpages);
+    let data = await this.Parser.parse(json, json.subpages);
     
     // Постраничный обход
     
