@@ -271,12 +271,12 @@ class Parser {
       
       // находим параметр NextPage, и соотв. ссылку на него
       let nextpagelink = pagedata.hasOwnProperty('nextpage') ? pagedata['nextpage'] : this.findItemByKey('nextpage');
-      
-      // Если след страницы нет - парсинг завершён: выходим
-      if(nextpagelink==="" || nextpagelink===null) return pagedata;
-      
+  
       // Триггер завершения
       if(await opts.stopCallback(pagedata)) return pagedata;
+  
+      // Если след страницы нет - парсинг завершён: выходим
+      if(nextpagelink==="" || nextpagelink===null) return pagedata;
       
       // Указываем новый линк для следующей страницы:
       json.url = nextpagelink;
