@@ -46,7 +46,7 @@ class Parser {
       const browser = await puppeteer.launch();
       const page = await browser.newPage();
       await page.goto(json.url, {waitUntil: 'load'});
-      await this.sleep(2000);
+      await this.sleep(opts.Pauses.SPA_AfterLoad);
       let html = await page.evaluate(() => {
         return document.querySelector('html').outerHTML
       });
@@ -235,6 +235,7 @@ class Parser {
    * @param opts.Pauses
    * @param {int} opts.Pauses.Subpages
    * @param {int} opts.Pauses.Pagination
+   * @param {int} opts.Pauses.SPA_AfterLoad
    * @param opts.Save
    * @param {string} opts.Save.toFile
    * @param {('xls')} opts.Save.format
@@ -296,6 +297,7 @@ class Parser {
     if(!opts.hasOwnProperty('Pauses')) opts['Pauses']={};
     if(!opts.Pauses.hasOwnProperty('Subpages')) opts.Pauses['Subpages']=0;
     if(!opts.Pauses.hasOwnProperty('Pagination')) opts.Pauses['Pagination']=0;
+    if(!opts.Pauses.hasOwnProperty('SPA_AfterLoad')) opts.Pauses['SPA_AfterLoad']=2000;
     
     if(!opts.hasOwnProperty('Save')) opts['Save']={};
     if(!opts.Save.hasOwnProperty('toFile')) opts.Save['toFile']="";
@@ -323,6 +325,7 @@ class Parser {
    * @param opts.Pauses
    * @param {int} opts.Pauses.Subpages
    * @param {int} opts.Pauses.Pagination
+   * @param {int} opts.Pauses.SPA_AfterLoad
    * @param opts.Save
    * @param {string} opts.Save.toFile
    * @param {('xls')} opts.Save.format
