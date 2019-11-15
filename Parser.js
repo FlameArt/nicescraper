@@ -240,11 +240,12 @@ class Parser {
    * @param {string} opts.Save.toFile
    * @param {('xls')} opts.Save.format
    * @param {('EachSubpage','EachPage')} opts.Save.saveAfter
+   * @param {int} opts.PagesLimit
    * @param {Function} opts.stopCallback Коллбек, который проверяет, когда надо остановиться при парсе страниц
    * @param {Function} opts.pageErrorCallback Коллбек, который вызывается при любой ошибки парса основной страницы (не sub-страниц)
    * @param {Function} opts.pageIgnoreCallback Коллбек, который проверяет, какую страницу не надо парсить
    * @param {Function} opts.pageConverter Функция, которая конвертит страницу
-   * @return {Promise<void>}
+   * @return {Promise<object>}
    */
   async parse(json, opts = {}) {
   
@@ -256,6 +257,7 @@ class Parser {
     if(json.hasOwnProperty('subpages'))
       subpages = json['subpages'];
     
+    let totalPages = 0;
     
     // Парсим страницы по ходу появления надписи "следующая страница" любое число раз
     while (true) {
@@ -278,6 +280,11 @@ class Parser {
       // Если след страницы нет - парсинг завершён: выходим
       if(nextpagelink==="" || nextpagelink===null) return pagedata;
       
+      // Если исчерпан лимит страниц - выходим
+      // Можно указать ноль или -1, и тогда это бесконечное число страниц
+      totalPages+=1;
+      if(totalPages >= opts.PagesLimit && opts.PagesLimit !== 0 && opts.PagesLimit !== -1) return pagedata;
+      
       // Указываем новый линк для следующей страницы:
       json.url = nextpagelink;
       
@@ -298,6 +305,8 @@ class Parser {
     if(!opts.Pauses.hasOwnProperty('Subpages')) opts.Pauses['Subpages']=0;
     if(!opts.Pauses.hasOwnProperty('Pagination')) opts.Pauses['Pagination']=0;
     if(!opts.Pauses.hasOwnProperty('SPA_AfterLoad')) opts.Pauses['SPA_AfterLoad']=2000;
+    
+    if(!opts.hasOwnProperty('PagesLimit')) opts['PagesLimit']=10;
     
     if(!opts.hasOwnProperty('Save')) opts['Save']={};
     if(!opts.Save.hasOwnProperty('toFile')) opts.Save['toFile']="";
