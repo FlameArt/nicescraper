@@ -2,6 +2,10 @@
 const parse = require('scrape-it');
 const puppeteer = require('puppeteer');
 const URL = require('url');
+const axios = require('axios');
+const iconv = require('iconv-lite');
+
+
 
 class Parser {
   
@@ -59,14 +63,55 @@ class Parser {
         debugger;
       }
     
-    } else
+    } else {
+      
+      // Получаем через axios, чтобы можно было определить кодировку
+      const response = await axios.request({
+        method: 'GET',
+        url: json.url,
+        responseType: 'arraybuffer',
+        responseEncoding: 'binary'
+      });
+      
+      // Конвертим буффер в UTF8 по-умолчанию
+      const UTF8Converted = response.data.toString('utf8');
+      
+      let encoding = null;
+      
+      // Ищем кодировку в хедерах
+      if(response.headers.hasOwnProperty('content-type') && response.headers['content-type'].indexOf('charset=')!==-1)
+        encoding = response.headers['content-type'].substr(response.headers['content-type'].indexOf('charset=')+'charset='.length);
+      
+      // Ищем кодировку в мета-тегах
+      if(encoding === null) {
+        let enc = UTF8Converted.match(/<head>(.*?)<meta(.*?) charset(\s*?)=(\s*?)("|')(.*?)("|')(.*?)<\/head>/);
+        if (enc !== null)
+          encoding = enc[6];
+        else {
+          // TODO: Нужна реализация поиска кодировки в http-equiv="Content-Type"
+          //enc = UTF8Converted.match(/<head>(.*?)<meta(.*?) http-equiv="Content-Type" (\s*?)=(\s*?)("|')(.*?)("|')(.*?)<\/head>/);
+          //if (enc !== null)
+            //encoding = enc[6];
+          console.log("Требуется реализация")
+          debugger;
+        }
+      }
+      
+      // Если кодировка utf8, либо не найдена - ничего не делаем, иначе - преобразуем в чистый текст
+      let DecodedData = "";
+      if(encoding === null || encoding.toString().toLowerCase().replace(/([^a-z0-9])/,'')==='utf8')
+        DecodedData = UTF8Converted;
+      else
+        DecodedData = iconv.decode(response.data, encoding);
+      
       // Если надо спарсить статично
       try {
-        parsed = (await parse(json.url, json.data)).data;
+        parsed = (await parse.scrapeHTML(DecodedData, json.data));
       } catch (ex) {
         console.log("Ошибка парса [static html]: " + ex.name + ": " + ex.message + "\r\n" + ex.stack);
         debugger;
       }
+    }
   
     return parsed;
   
