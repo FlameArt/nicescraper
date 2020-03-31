@@ -81,7 +81,7 @@ class WS extends WebSocketCore {
                 json.data.domain = that.getDomainFromURL(json.data.url);
 
                 // ищем связанные с сайтом подстраницы домена в базе
-                json.data.subpages = await SQL.selectAll("parsers", 'domain = ? AND name!="" AND id!=?', [json.data.domain, json.data.id]);
+                //json.data.subpages = await SQL.selectAll("parsers", 'domain = ? AND name!="" AND id!=?', [json.data.domain, json.data.id]);
 
                 let updated = await SQL.BulkUpdate("parsers", [json.data]);
 
