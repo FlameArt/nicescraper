@@ -19,10 +19,11 @@
   },
   "homepage": "https://github.com/FlameArt/nicescraper#readme",
   "dependencies": {
-    "axios": "^0.19.0",
-    "iconv-lite": "^0.5.0",
-    "puppeteer": "^2.0.0",
-    "scrape-it": "^5.2.0",
+    "axios": "^0.19.2",
+    "easymysql": "github:FlameArt/easymysql",
+    "iconv-lite": "^0.5.1",
+    "puppeteer": "^2.1.1",
+    "scrape-it": "^5.2.3",
     "websocket-core": "github:FlameArt/websocket-core"
   }
 }
