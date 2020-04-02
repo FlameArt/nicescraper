@@ -8,4 +8,4 @@ yarn-error.log
 package-lock.json
 run.cmd
 Parser.lnk
-config.json
+configParsers.json

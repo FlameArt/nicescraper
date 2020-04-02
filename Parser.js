@@ -4,11 +4,22 @@ const puppeteer = require('puppeteer');
 const URL = require('url');
 const axios = require('axios');
 const iconv = require('iconv-lite');
+const fs = require('fs');
 
 
 
 class Parser {
-  
+
+  constructor(SQL=null) {
+
+    /**
+     * Подключение к БД, если нужно
+     * @type {MySQLClass}
+     */
+    this.SQL = null;
+
+  }
+
   /**
    * Парсинг
    * @param json
@@ -296,11 +307,17 @@ class Parser {
   
     // Нормализуем параметры и заполняем стандартными параметрами неизвестные
     opts = this.normalizeOpts(opts);
-    
+
+    // Если вместо json передан int номер парсера в базе, загружаем его
+    if(typeof json === 'number') {
+      json = await this.getJSONFromDB(json);
+    }
+
     // Не нужно указывать subpages, если они есть во входном массиве [так обычно и приходит]
     let subpages = [];
-    if(json.hasOwnProperty('subpages'))
+    if(json.hasOwnProperty('subpages')) {
       subpages = json['subpages'];
+    }
     
     let totalPages = 0;
     
@@ -394,6 +411,42 @@ class Parser {
     // Чекаем формат
     if(opts.Save.toFile==="") return;
     
+  }
+
+  async getJSONFromDB(id) {
+
+    let that = this;
+
+    // Проверяем наличие объекта SQL: он может быть доставлен извне или уже быть подсоединён
+    // Если коннекта нет - соединяем самостоятельно
+    if(that.SQL === null) {
+
+      // Парсим конфиг
+      this.config = fs.existsSync("configParsers.json") ? JSON.parse(fs.readFileSync('configParsers.json', 'utf8')) : null;
+
+      if (this.config !== null) {
+        that.SQL = new (require('easymysql'));
+        await that.SQL.connect(that.config.mysql.host, that.config.mysql.port, that.config.mysql.login, that.config.mysql.password, that.config.mysql.db);
+      }
+      else
+        throw "Невозможно соединиться с базой";
+
+    }
+
+    // Соединение есть, получаем парсер из базы по его ID
+    let parser = await that.SQL.get("parsers", "id = ?", [id]);
+
+    // декодим данные
+    parser.data = JSON.parse(parser.data);
+
+    // получаем подстраницы
+    parser.subpages = await that.SQL.selectAll("parsers", "domain = ?", [ parser.domain ]);
+
+    // Десериализуем подстраницы
+    parser.subpages.forEach(res=>{if(typeof res.data === 'string' && res.data.substr(0,1)==='{') res.data = JSON.parse(res.data);});
+
+    return parser;
+
   }
   
 }

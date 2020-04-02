@@ -26,11 +26,13 @@ class ParserTester {
         let that = this;
 
         // Парсим конфиг
-        this.config = fs.existsSync("config.json") ? JSON.parse(fs.readFileSync('config.json', 'utf8')) : null;
+        this.config = fs.existsSync("configParsers.json") ? JSON.parse(fs.readFileSync('configParsers.json', 'utf8')) : null;
 
         if (this.config !== null) {
             await SQL.connect(that.config.mysql.host, that.config.mysql.port, that.config.mysql.login, that.config.mysql.password, that.config.mysql.db);
         }
+
+        //let data = await that.Parser.parse(1, {PagesLimit: 1});
 
         this.WS.init = true;
         this.WS.Parser = this.Parser;
@@ -96,24 +98,55 @@ class WS extends WebSocketCore {
             }
             case 'getSite': {
 
-              json.domain = that.getDomainFromURL(json.url);
+                json.domain = that.getDomainFromURL(json.url);
 
-              // Тут нужно выискивать по регекспу юрл вместо точного совпадения
+                // Тут нужно выискивать по регекспу юрл вместо точного совпадения
+                let domainItems = await SQL.selectAll("parsers", "domain = ?", [json.domain]);
 
-              let thatItem = await SQL.get("parsers", "domain = ? AND url = ?", [json.domain, json.url]);
+                // ищем по регекспам
+                let findedID = null;
+                for (let item of domainItems) {
 
-              user.WebSocket.send(JSON.stringify({type: "info", data: thatItem}));
+                    // Если тут нет регекспа, то поиск по точному совпадению
+                    if(item.url.indexOf("--")===-1) {
+                        if (item.url === json.url) {
+                            findedID = item.id;
+                            break;
+                        }
+                        continue;
+                    }
 
-              break;
+                    // Регексп есть - сравниваем
+
+                    // фиксим все спец-символы
+                    let tRegex = item.url.replace(/[.*+?^${}()|[\]\\]/g,'\\$&');
+
+                    // Делаем замены шаблонов
+                    tRegex = tRegex.replace(/--any--/g, "(.*?)");
+
+                    if(json.url.match(new RegExp(tRegex))) {
+                        findedID = item.id;
+                        break;
+                    }
+
+                }
+
+                let thatItem = await SQL.get("parsers", "id = ?", [findedID]);
+
+                user.WebSocket.send(JSON.stringify({type: "info", data: thatItem}));
+
+                break;
             }
 
             case 'parse':
 
-                let domainx = that.getDomainFromURL(json.url);
+                let domainx = that.getDomainFromURL(json.current_url);
 
                 // ищем связанные с сайтом подстраницы домена в базе
                 json.subpages = await SQL.selectAll("parsers", 'domain = ? AND name!=""', [domainx]);
 
+                // тестовый парс берёт ссылку отсюда, а не из url, в котором регулярка
+                json.url = json.current_url;
 
                 // Парсим
                 let data = await this.Parser.parse(json, {PagesLimit: 1});
