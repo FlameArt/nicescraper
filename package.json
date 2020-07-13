@@ -1,5 +1,5 @@
 {
-  "name": "nicescraper",
+  "name": "flamescraper",
   "version": "1.0.0",
   "description": "Deep web scraper with recursive subpages for each param and unknown-pagination loop",
   "main": "Parser.js",
@@ -20,10 +20,10 @@
   "homepage": "https://github.com/FlameArt/nicescraper#readme",
   "dependencies": {
     "axios": "^0.19.2",
-    "easymysql": "github:FlameArt/easymysql",
+    "eznodemysql": "^1.0.3",
     "iconv-lite": "^0.5.1",
     "puppeteer": "^2.1.1",
     "scrape-it": "^5.2.3",
-    "websocket-core": "github:FlameArt/websocket-core"
+    "websocketcore": "^1.0.1"
   }
 }
