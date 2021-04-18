@@ -1,5 +1,5 @@
-const WebSocketCore = require('websocket-core');
-const SQL = new (require('easymysql'));
+const WebSocketCore = require('websocketcore');
+const SQL = new (require('eznodemysql'));
 const fs = require('fs');
 const url = require('url');
 
