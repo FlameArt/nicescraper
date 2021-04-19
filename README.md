@@ -2,7 +2,7 @@
 
 Extended and fully async version of [scrape-it](https://github.com/IonicaBizau/scrape-it)
 
-    npm install --save FlameArt/nicescraper
+    npm install --save flamescraper
 
 ###### Features and usage
 * Multiple pages parse per request
