@@ -419,19 +419,7 @@ class Parser {
 
     // Проверяем наличие объекта SQL: он может быть доставлен извне или уже быть подсоединён
     // Если коннекта нет - соединяем самостоятельно
-    if(that.SQL === null) {
-
-      // Парсим конфиг
-      this.config = fs.existsSync("configParsers.json") ? JSON.parse(fs.readFileSync('configParsers.json', 'utf8')) : null;
-
-      if (this.config !== null) {
-        that.SQL = new (require('easymysql'));
-        await that.SQL.connect(that.config.mysql.host, that.config.mysql.port, that.config.mysql.login, that.config.mysql.password, that.config.mysql.db);
-      }
-      else
-        throw "Невозможно соединиться с базой";
-
-    }
+    await that.initDB();
 
     // Соединение есть, получаем парсер из базы по его ID
     let parser = await that.SQL.get("parsers", "id = ?", [id]);
@@ -446,6 +434,25 @@ class Parser {
     parser.subpages.forEach(res=>{if(typeof res.data === 'string' && res.data.substr(0,1)==='{') res.data = JSON.parse(res.data);});
 
     return parser;
+
+  }
+
+  // Загружаем базу одноразово вначале, чтобы не было перекрёстных соединений при одновременном запуске нескольких парсеров
+  async initDB() {
+
+    if(that.SQL === null) {
+
+      // Парсим конфиг
+      this.config = fs.existsSync("configParsers.json") ? JSON.parse(fs.readFileSync('configParsers.json', 'utf8')) : null;
+
+      if (this.config !== null) {
+        that.SQL = new (require('easymysql'));
+        await that.SQL.connect(that.config.mysql.host, that.config.mysql.port, that.config.mysql.login, that.config.mysql.password, that.config.mysql.db);
+      }
+      else
+        throw "Невозможно соединиться с базой";
+
+    }
 
   }
   
