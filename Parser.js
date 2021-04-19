@@ -440,13 +440,14 @@ class Parser {
   // Загружаем базу одноразово вначале, чтобы не было перекрёстных соединений при одновременном запуске нескольких парсеров
   async initDB() {
 
+    let that = this;
     if(that.SQL === null) {
 
       // Парсим конфиг
       this.config = fs.existsSync("configParsers.json") ? JSON.parse(fs.readFileSync('configParsers.json', 'utf8')) : null;
 
       if (this.config !== null) {
-        that.SQL = new (require('easymysql'));
+        that.SQL = new (require('eznodemysql'));
         await that.SQL.connect(that.config.mysql.host, that.config.mysql.port, that.config.mysql.login, that.config.mysql.password, that.config.mysql.db);
       }
       else
