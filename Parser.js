@@ -58,17 +58,18 @@ class Parser {
   
     // Загружаем текст, если нужна полноценная загрузка SPA
     if (json.loadType === 'spa') {
-      const browser = await puppeteer.launch();
-      const page = await browser.newPage();
-      await page.goto(json.url, {waitUntil: 'load'});
-      await this.sleep(opts.Pauses.SPA_AfterLoad);
-      let html = await page.evaluate(() => {
-        return document.querySelector('html').outerHTML
-      });
-      await browser.close();
-    
       try {
+        const browser = await puppeteer.launch();
+        const page = await browser.newPage();
+        await page.goto(json.url, {waitUntil: 'load'});
+        await this.sleep(opts.Pauses.SPA_AfterLoad);
+        let html = await page.evaluate(() => {
+          return document.querySelector('html').outerHTML
+        });
+        await browser.close();
+
         parsed = await parse.scrapeHTML(html, json.data);
+
       } catch (ex) {
         console.log("Ошибка парса [spa]: " + ex.name + ": " + ex.message + "\r\n" + ex.stack);
         debugger;
