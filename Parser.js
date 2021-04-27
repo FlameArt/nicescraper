@@ -7,7 +7,6 @@ const iconv = require('iconv-lite');
 const fs = require('fs');
 
 
-
 class Parser {
 
   constructor(SQL=null) {
@@ -17,6 +16,24 @@ class Parser {
      * @type {MySQLClass}
      */
     this.SQL = null;
+
+    /**
+     * Единый инстанс пупетки
+     * @type {null}
+     */
+    this.Puppeteer = null;
+
+    /**
+     * Запуск
+     * @type {boolean}
+     */
+    this.PuppeteerRunning = false;
+
+    /**
+     * Куки всех доменов в пуле
+     * @type {*[]}
+     */
+    this.Cookies = [];
 
   }
 
@@ -55,36 +72,60 @@ class Parser {
     this.prepareParser(json.data);
   
     let parsed = null;
+    let cookies = null;
   
     // Загружаем текст, если нужна полноценная загрузка SPA
-    if (json.loadType === 'spa') {
+    if (json.loadType === 'spa' || json.loadType === 'cookies' && this.GetDomainCookie(json.url)===null) {
       try {
-        const browser = await puppeteer.launch();
-        const page = await browser.newPage();
+
+        // Запускаем инстанс, если не запущен
+        await this.LaunchBrowserInstance();
+
+        let page = await this.Puppeteer.newPage();
         await page.goto(json.url, {waitUntil: 'load'});
         await this.sleep(opts.Pauses.SPA_AfterLoad);
-        let html = await page.evaluate(() => {
-          return document.querySelector('html').outerHTML
-        });
-        await browser.close();
 
-        parsed = await parse.scrapeHTML(html, json.data);
+        let html = "";
+
+        if (json.loadType === 'spa')
+          html = await page.evaluate(() => {
+            return document.querySelector('html').outerHTML
+          });
+
+        if( json.loadType === 'cookies' )
+          html = await page.cookies();
+
+        await page.close();
+
+        if( json.loadType === 'spa' )
+          parsed = await parse.scrapeHTML(html, json.data);
+        if( json.loadType === 'cookies' )
+          this.SetDomainCookie(html, json.url);
 
       } catch (ex) {
         console.log("Ошибка парса [spa]: " + ex.name + ": " + ex.message + "\r\n" + ex.stack);
         debugger;
       }
     
-    } else {
+    }
+
+    if(json.loadType === 'html' || json.loadType === 'cookies' && this.GetDomainCookie(json.url)!==null){
       
       // Получаем через axios, чтобы можно было определить кодировку
       const response = await axios.request({
         method: 'GET',
         url: json.url,
         responseType: 'arraybuffer',
-        responseEncoding: 'binary'
+        responseEncoding: 'binary',
+        headers: Object.assign({}, this.GetDomainCookie(json.url) === null ? {} : {
+          Cookie: this.GetDomainCookie(json.url).map(res=>res.name + "=" + res.value).join(";")
+        })
       });
-      
+
+      // Сохраняем свежие кукисы
+      // TODO: необязательно, но желательно, если возникнет када-нибудь потребность
+      const cookie = response.headers["set-cookie"];
+
       // Конвертим буффер в UTF8 по-умолчанию
       const UTF8Converted = response.data.toString('utf8');
       
@@ -457,7 +498,74 @@ class Parser {
     }
 
   }
-  
+
+  /**
+   * Обойти защиту типа Клаудфлаера и получить кукисы
+   * @param url
+   * @param sleepMS
+   */
+  async getCookiesFromBrowser(url, sleepMS = 5000) {
+
+    // Запускаем инстанс, если не запущен
+    await this.LaunchBrowserInstance();
+
+    let page = await this.Puppeteer.newPage();
+    await page.goto(url, {waitUntil: 'load'});
+    await this.sleep(sleepMS);
+    let html = await page.cookies();
+    await page.screenshot({path: 'buddy-screenshot.png'});
+    await page.close();
+
+    return html;
+
+  }
+
+  /**
+   * Закрыть все соединения и браузер
+   */
+  async close() {
+
+    // Закрываем инстанс
+    if(this.Puppeteer !== null) {
+      await this.Puppeteer.close();
+    }
+
+    // Закрываем SQL
+    await this.SQL.disconnect();
+
+  }
+
+  async LaunchBrowserInstance() {
+
+    if(this.PuppeteerRunning === true) return;
+
+    // Запускаем инстанс, если не запущен
+    if(this.Puppeteer === null) {
+      this.PuppeteerRunning = true;
+      this.Puppeteer = await puppeteer.launch();
+      this.PuppeteerRunning = false;
+    }
+
+  }
+
+  GetDomainCookie(url) {
+    let domain = URL.parse(url);
+    return this.Cookies[ domain.hostname ] === undefined ? null : this.Cookies[ domain.hostname ];
+  }
+
+  /**
+   * Установить кукисы для конкретного домена
+   * @param items[]
+   * @param url
+   * @returns {null|*}
+   * @constructor
+   */
+  SetDomainCookie(items, url) {
+    let domain = URL.parse(url);
+    this.Cookies[ domain.hostname ] = items.filter(res=>res.domain.substr(1) === domain.hostname || res.domain === domain.hostname);
+    return true;
+  }
+
 }
 
 module.exports = Parser;

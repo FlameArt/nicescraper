@@ -38,6 +38,15 @@ class ParserTester {
         this.WS.Parser = this.Parser;
         this.WS.start(7777);
 
+        await that.Parser.parsePage({
+            loadType: 'cookies',
+            url: 'https://freelancehunt.com/projects',
+            SPA_AfterLoad: 5000
+        },
+            {
+                Pauses: {SPA_AfterLoad: 5000}
+            });
+
     }
 
 }
