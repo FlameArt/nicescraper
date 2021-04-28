@@ -530,8 +530,9 @@ class Parser {
       await this.Puppeteer.close();
     }
 
-    // Закрываем SQL
-    await this.SQL.disconnect();
+    // Закрываем SQL - закрывать не надо, т.к. соединение вынесено в общее
+    // await this.SQL.disconnect();
+    // this.SQL = null;
 
   }
 
