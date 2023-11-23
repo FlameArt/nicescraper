@@ -1,6 +1,6 @@
-import { AxiosResponse } from 'axios';
-import * as puppeteer from 'puppeteer';
-import * as iconv from 'iconv-lite';
+import MySQLClass from "eznodemysql";
+import puppeteer from 'puppeteer';
+
 
 declare class Parser {
    constructor(SQL?: MySQLClass | null);
