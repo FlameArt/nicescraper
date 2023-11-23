@@ -1,6 +1,6 @@
 {
   "name": "flamescraper",
-  "version": "1.0.9",
+  "version": "1.0.10",
   "description": "Deep web scraper with recursive subpages for each param and unknown-pagination loop",
   "main": "Parser.js",
   "scripts": {},

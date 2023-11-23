@@ -15,7 +15,7 @@ declare class Parser {
     * Единый инстанс пупетки
     * @type {null}
     */
-   Puppeteer: puppeteer.Browser | null;
+   Puppeteer: any;
 
    /**
     * Запуск
